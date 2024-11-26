@@ -1,3 +1,5 @@
+So far this is a direct copy of the blinky sample from the ZephyrOS samples. The rest of this readme is from the sample.
+
 .. zephyr:code-sample:: blinky
    :name: Blinky
    :relevant-api: gpio_interface
