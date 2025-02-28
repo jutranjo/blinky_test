@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
+#include <zephyr/drivers/uart.h>
 
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS   500
@@ -17,6 +18,8 @@
 
 
 #define SW0_NODE	DT_ALIAS(sw0)
+
+#define UART_DEVICE DT_CHOSEN(zephyr_console) // Use default console UART
 
 /*
  * A build error on this line means your board is unsupported.
@@ -41,6 +44,13 @@ int main(void)
 {
 	int ret;
 	bool led_state = true;
+
+	const struct device *uart_dev = DEVICE_DT_GET(UART_DEVICE);
+
+    if (!device_is_ready(uart_dev)) {
+        printk("UART device not ready\n");
+        return 0;
+    }
 
 	if (!gpio_is_ready_dt(&led) && !gpio_is_ready_dt(&led2)) {
 		return 0;
@@ -88,6 +98,10 @@ int main(void)
 	//Switch 2nd LED state so they alternatively blink
 	gpio_pin_toggle_dt(&led2);
 
+
+    const char msg[] = "Hello, PC!\n";
+    uart_tx(uart_dev, msg, sizeof(msg), SYS_FOREVER_MS);
+
 	while (1) {
 		ret = gpio_pin_toggle_dt(&led);
 		ret = gpio_pin_toggle_dt(&led2);
@@ -100,10 +114,11 @@ int main(void)
 		if (val > 0) {
 			//gpio_pin_set_dt(&led, val);
 			gpio_pin_toggle_dt(&led);
+			printf(msg);
 		}
 
 		led_state = !led_state;
-		printf("LED state: %s\n", led_state ? "ON" : "OFF");
+		//printf("LED state: %s\n", led_state ? "ON" : "OFF");
 		k_msleep(SLEEP_TIME_MS);
 	}
 	return 0;
